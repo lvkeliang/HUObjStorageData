@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 var STORAGE_ROOT = config.Configs.StorageRoot
@@ -29,18 +31,29 @@ func GetHandler(c *gin.Context) {
 }
 
 // 验证文件并获取文件地址
-func getFile(hash string) string {
-	filePath := config.Configs.StorageRoot + "/objects/" + hash
-	file, _ := os.Open(filePath)
-	filehash := url.PathEscape(util.CalculateHash(file))
-	file.Close()
-	if filehash != hash {
-		log.Println("object hash mismatch, remove", filePath)
-		locate.Del(hash)
-		os.Remove(filePath)
+func getFile(name string) string {
+	path := config.Configs.StorageRoot + "/objects/" + name + ".*"
+	files, _ := filepath.Glob(path)
+	if len(files) != 1 {
 		return ""
 	}
-	return filePath
+	file, err := os.Open(files[0])
+	if err != nil {
+		return ""
+	}
+
+	filehash := url.PathEscape(util.CalculateHash(file))
+	file.Close()
+
+	hash := strings.Split(files[0], ".")[2]
+
+	if filehash != hash {
+		log.Println("object hash mismatch, remove", files[0])
+		locate.Del(hash)
+		os.Remove(files[0])
+		return ""
+	}
+	return files[0]
 }
 
 func sendFile(w io.Writer, filePath string) {

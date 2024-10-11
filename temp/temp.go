@@ -3,6 +3,7 @@ package temp
 import (
 	"HUObjStorageData/config"
 	"HUObjStorageData/locate"
+	"HUObjStorageData/util"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -10,8 +11,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -23,6 +26,17 @@ type tempInfo struct {
 	Uuid string
 	Name string
 	Size int64
+}
+
+func (t *tempInfo) hash() string {
+	s := strings.Split(t.Name, ".")
+	return s[0]
+}
+
+func (t *tempInfo) id() int {
+	s := strings.Split(t.Name, ".")
+	id, _ := strconv.Atoi(s[1])
+	return id
 }
 
 // 获取文件的专用锁
@@ -88,12 +102,16 @@ func PutHandler(c *gin.Context) {
 }
 
 func commitTempObject(dataFile string, info *tempInfo) error {
-	targetPath := config.Configs.StorageRoot + "/objects/" + info.Name
+	file, _ := os.Open(dataFile)
+	d := url.PathEscape(util.CalculateHash(file))
+	file.Close()
+
+	targetPath := config.Configs.StorageRoot + "/objects/" + info.Name + "." + d
 	err := os.Rename(dataFile, targetPath)
 	if err != nil {
 		return err
 	}
-	locate.Add(info.Name)
+	locate.Add(info.hash(), info.id())
 	return nil
 }
 
