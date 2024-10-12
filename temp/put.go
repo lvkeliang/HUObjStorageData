@@ -4,7 +4,9 @@ import (
 	"HUObjStorageData/config"
 	"HUObjStorageData/locate"
 	"HUObjStorageData/util"
+	"compress/gzip"
 	"github.com/gin-gonic/gin"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -63,10 +65,20 @@ func PutHandler(c *gin.Context) {
 func commitTempObject(dataFile string, info *tempInfo) error {
 	file, _ := os.Open(dataFile)
 	d := url.PathEscape(util.CalculateHash(file))
-	file.Close()
+	file.Seek(0, io.SeekStart)
 
-	targetPath := config.Configs.StorageRoot + "/objects/" + info.Name + "." + d
-	err := os.Rename(dataFile, targetPath)
+	writer, _ := os.Create(config.Configs.StorageRoot + "/objects/" + info.Name + "." + d)
+	gzipWriter := gzip.NewWriter(writer)
+	_, err := io.Copy(gzipWriter, file)
+	if err != nil {
+		gzipWriter.Close()
+		file.Close()
+		return err
+	}
+
+	gzipWriter.Close()
+	file.Close()
+	err = os.Remove(dataFile)
 	if err != nil {
 		return err
 	}
