@@ -22,6 +22,8 @@ func InitRouter() {
 		tempGroup.PATCH("/:uuid", temp.PatchHandler)
 		tempGroup.POST("/:hash", temp.PostHandler)
 		tempGroup.DELETE("/:uuid", temp.DelHandler)
+		tempGroup.GET("/:uuid", temp.GetHandler)
+		tempGroup.HEAD("/:uuid", temp.HeadHandler)
 	}
 
 	// 启动服务
