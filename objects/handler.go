@@ -73,3 +73,13 @@ func sendFile(w io.Writer, filePath string) {
 	io.Copy(w, gzipStream)
 	gzipStream.Close()
 }
+
+func DelHandler(c *gin.Context) {
+	hash := c.Param("hash")
+	files, _ := filepath.Glob(config.Configs.StorageRoot + "/object/" + hash + ".*")
+	if len(files) != 1 {
+		return
+	}
+	locate.Del(hash)
+	os.Rename(files[0], config.Configs.StorageRoot+"/garbage/"+filepath.Base(files[0]))
+}

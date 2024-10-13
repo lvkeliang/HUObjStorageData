@@ -25,11 +25,15 @@ func main() {
 func initStorageRoot() {
 	StorageDir := filepath.Dir(config.Configs.StorageRoot + "/objects/")
 	tempStorageDir := filepath.Dir(config.Configs.StorageRoot + "/temp/")
+	garbageDir := filepath.Dir(config.Configs.StorageRoot + "/garbage/")
 
 	if err := os.MkdirAll(StorageDir, os.ModePerm); err != nil {
 		log.Println(err)
 	}
 	if err := os.MkdirAll(tempStorageDir, os.ModePerm); err != nil {
+		log.Println(err)
+	}
+	if err := os.MkdirAll(garbageDir, os.ModePerm); err != nil {
 		log.Println(err)
 	}
 	return

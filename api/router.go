@@ -14,6 +14,7 @@ func InitRouter() {
 	objectsGroup := r.Group("/objects")
 	{
 		objectsGroup.GET("/:hash", objects.GetHandler)
+		objectsGroup.DELETE("/:hash", objects.DelHandler)
 	}
 
 	tempGroup := r.Group("/temp")
